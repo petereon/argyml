@@ -24,7 +24,7 @@ version:            0.1.0.0
 
 -- A short (one-line) description of the package.
 synopsis:
-    Parses command line arguments into YML file for downstream use
+    argyml is a command line tool that converts CLI arguments, options and flags into a YAML for downstream parsing
 
 -- A longer description of the package.
 -- description:
