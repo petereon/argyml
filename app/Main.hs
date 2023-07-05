@@ -2,14 +2,29 @@ module Main where
 import System.Environment (getArgs)
 import Data.List
 
-data ArgLike = Option String String | Flag String | Arg String deriving (Show)
+data ArgStruct = ArgStruct { 
+    options :: [(String, String)],
+    flags :: [String],
+    args :: [String]
+}
 
-main :: IO ()
-main = do
-     stdIn <- getContents
-     args <- getArgs
-     print $ parseArgLike args
-     print stdIn
+quote :: String -> String
+quote s = "\"" ++ s ++ "\""
+
+instance Show ArgStruct where
+  show (ArgStruct options' flags' args') =
+    unlines $
+      ["options:"] ++
+      indentLines 2 (map (\(key, value) -> "- key: " ++ quote key ++ "\n    value: " ++ quote value) options') ++
+      ["flags:"] ++
+      indentLines 2 (map (\flag -> "- " ++ quote flag) flags') ++
+      ["args:"] ++
+      indentLines 2 (map (\arg -> "- " ++ quote arg) args')
+
+indentLines :: Int -> [String] -> [String]
+indentLines indentSize = map (replicate indentSize ' ' ++) 
+
+data ArgLike = Option String String | Flag String | Arg String deriving (Show)
 
 parseArgLike :: [String] -> [ArgLike]
 parseArgLike [] = []
@@ -21,3 +36,19 @@ parseArgLike (x:y:xs)
     | "-" `isPrefixOf` x && "-" `isPrefixOf` y = Flag x : parseArgLike (y : xs)
     | "-" `isPrefixOf` x = Option x y : parseArgLike xs
     | otherwise = Arg x : parseArgLike (y : xs)
+
+
+restructureArgLike :: [ArgLike] -> ArgStruct
+restructureArgLike [] = ArgStruct [] [] []
+restructureArgLike (x:xs) = case x of
+    Option a b -> ArgStruct ((a, b) : options rest) (flags rest) (args rest)
+    Flag a -> ArgStruct (options rest) (a : flags rest) (args rest)
+    Arg a -> ArgStruct (options rest) (flags rest) (a : args rest)
+    where rest = restructureArgLike xs
+
+
+main :: IO ()
+main = do
+     arguments <- getArgs
+     print $ restructureArgLike $ parseArgLike arguments
+
