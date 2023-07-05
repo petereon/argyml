@@ -4,7 +4,7 @@
 
 ## Usage
 
-Usage of **argyml** is really easy, you pass it command-line flags:
+Usage of **argyml** is really easy, you pass it command-line arguments, options and flags:
 
 ```sh
 argyml some arguments --host 127.0.0.1 -i --another-flag
