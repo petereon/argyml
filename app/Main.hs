@@ -18,7 +18,7 @@ instance Show ArgStruct where
         ++ indentLines 2 (map (\(key, value) -> "- key: " ++ quote key ++ "\n    value: " ++ quote value) options')
         ++ ["flags:"]
         ++ indentLines 2 (map (\flag -> "- " ++ quote flag) flags')
-        ++ ["args:"]
+        ++ ["arguments:"]
         ++ indentLines 2 (map (\arg -> "- " ++ quote arg) args')
 
 indentLines :: Int -> [String] -> [String]
