@@ -15,9 +15,7 @@ instance Show ArgStruct where
   show (ArgStruct options' flags' args') =
     unlines $
       ["options:"]
-      -- TODO: use a better way to indent value, this is ugly
-      -- This function needs a refactor in general
-        ++ indentLines 2 (map (\(key, value) -> "- key: " ++ quote key ++ "\n    value: " ++ quote value) options')
+        ++ indentLines 2 ((>>=) options' (\(key, value) -> ["- key: " ++ quote key, "  value: " ++ quote value]))
         ++ ["flags:"]
         ++ indentLines 2 (map (\flag -> "- " ++ quote flag) flags')
         ++ ["arguments:"]
@@ -31,13 +29,13 @@ quote s = "\"" ++ s ++ "\""
 
 parseArgLike :: [String] -> [ArgLike]
 parseArgLike [] = []
-parseArgLike [x]
-  | "-" `isPrefixOf` x = [Flag x]
-  | otherwise = [Arg x]
-parseArgLike (x : y : xs)
-  | "-" `isPrefixOf` x && "-" `isPrefixOf` y = Flag x : parseArgLike (y : xs)
-  | "-" `isPrefixOf` x = Option x y : parseArgLike xs
-  | otherwise = Arg x : parseArgLike (y : xs)
+parseArgLike (x : xs)
+  | hasDashPrefix x = case xs of
+      (y : ys) | not (hasDashPrefix y) -> Option x y : parseArgLike ys
+      _ -> Flag x : parseArgLike xs
+  | otherwise = Arg x : parseArgLike xs
+  where
+    hasDashPrefix = ("-" `isPrefixOf`)
 
 restructureArgLike :: [ArgLike] -> ArgStruct
 restructureArgLike [] = ArgStruct [] [] []
