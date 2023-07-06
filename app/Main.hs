@@ -15,6 +15,8 @@ instance Show ArgStruct where
   show (ArgStruct options' flags' args') =
     unlines $
       ["options:"]
+      -- TODO: use a better way to indent value, this is ugly
+      -- This function needs a refactor in general
         ++ indentLines 2 (map (\(key, value) -> "- key: " ++ quote key ++ "\n    value: " ++ quote value) options')
         ++ ["flags:"]
         ++ indentLines 2 (map (\flag -> "- " ++ quote flag) flags')
