@@ -1,3 +1,5 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module Main where
 
 import Data.List
@@ -9,17 +11,17 @@ data ArgStruct = ArgStruct
   { options :: [(String, String)],
     flags :: [String],
     args :: [String]
-  }
+  } deriving (Show)
 
-instance Show ArgStruct where
-  show (ArgStruct options' flags' args') =
-    unlines $
-      ["options:"]
-        ++ indentLines 2 ((>>=) options' (\(key, value) -> ["- key: " ++ quote key, "  value: " ++ quote value]))
-        ++ ["flags:"]
-        ++ indentLines 2 (map (\flag -> "- " ++ quote flag) flags')
-        ++ ["arguments:"]
-        ++ indentLines 2 (map (\arg -> "- " ++ quote arg) args')
+pprint :: ArgStruct -> String
+pprint (ArgStruct options' flags' args') =
+  unlines $
+    ["options:"]
+      ++ indentLines 2 ((>>=) options' (\(key, value) -> ["- key: " ++ quote key, "  value: " ++ quote value]))
+      ++ ["flags:"]
+      ++ indentLines 2 (map (\flag -> "- " ++ quote flag) flags')
+      ++ ["arguments:"]
+      ++ indentLines 2 (map (\arg -> "- " ++ quote arg) args')
 
 indentLines :: Int -> [String] -> [String]
 indentLines indentSize = map (replicate indentSize ' ' ++)
@@ -49,4 +51,4 @@ restructureArgLike (x : xs) = case x of
 main :: IO ()
 main = do
   arguments <- getArgs
-  print $ restructureArgLike $ parseArgLike arguments
+  putStrLn $ pprint $ restructureArgLike $ parseArgLike arguments
