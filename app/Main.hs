@@ -1,5 +1,3 @@
-{-# LANGUAGE InstanceSigs #-}
-
 module Main where
 
 import Data.List
@@ -13,8 +11,8 @@ data ArgStruct = ArgStruct
     args :: [String]
   } deriving (Show)
 
-pprint :: ArgStruct -> String
-pprint (ArgStruct options' flags' args') =
+prettyFormat :: ArgStruct -> String
+prettyFormat (ArgStruct options' flags' args') =
   unlines $
     ["options:"]
       ++ indentLines 2 ((>>=) options' (\(key, value) -> ["- key: " ++ quote key, "  value: " ++ quote value]))
@@ -49,6 +47,4 @@ restructureArgLike (x : xs) = case x of
     rest = restructureArgLike xs
 
 main :: IO ()
-main = do
-  arguments <- getArgs
-  putStrLn $ pprint $ restructureArgLike $ parseArgLike arguments
+main = putStrLn . prettyFormat . restructureArgLike . parseArgLike =<< getArgs
