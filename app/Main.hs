@@ -1,8 +1,9 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module Main where
 
-import Data.List
+import Data.List ( isPrefixOf )
 import System.Environment (getArgs)
-
 data ArgLike = Option String String | Flag String | Arg String deriving (Show)
 
 data ArgStruct = ArgStruct
@@ -10,6 +11,15 @@ data ArgStruct = ArgStruct
     flags :: [String],
     args :: [String]
   } deriving (Show)
+
+instance Semigroup ArgStruct where
+  (<>) :: ArgStruct -> ArgStruct -> ArgStruct
+  (<>) (ArgStruct options' flags' args') (ArgStruct options'' flags'' args'') =
+    ArgStruct (options' <> options'') (flags' <> flags'') (args' <> args'')
+
+instance Monoid ArgStruct where
+  mempty :: ArgStruct
+  mempty = ArgStruct [] [] []
 
 prettyFormat :: ArgStruct -> String
 prettyFormat (ArgStruct options' flags' args') =
@@ -37,14 +47,13 @@ parseArgLike (x : xs)
   where
     hasDashPrefix = ("-" `isPrefixOf`)
 
+argToStruct :: ArgLike -> ArgStruct
+argToStruct (Option key value) = ArgStruct [(key, value)] [] []
+argToStruct (Flag flag) = ArgStruct [] [flag] []
+argToStruct (Arg arg) = ArgStruct [] [] [arg]
+
 restructureArgLike :: [ArgLike] -> ArgStruct
-restructureArgLike [] = ArgStruct [] [] []
-restructureArgLike (x : xs) = case x of
-  Option a b -> ArgStruct ((a, b) : options rest) (flags rest) (args rest)
-  Flag a -> ArgStruct (options rest) (a : flags rest) (args rest)
-  Arg a -> ArgStruct (options rest) (flags rest) (a : args rest)
-  where
-    rest = restructureArgLike xs
+restructureArgLike = foldMap argToStruct
 
 main :: IO ()
 main = putStrLn . prettyFormat . restructureArgLike . parseArgLike =<< getArgs
