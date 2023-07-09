@@ -55,7 +55,7 @@ arguments:
 
 ## Roadmap
 
-- [ ] Refactor
+- [x] Refactor
 - [ ] Option to directly generate a bash associative array?
 
 [^1]: For type casting you should rely on downstream.
