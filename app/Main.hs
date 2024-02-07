@@ -1,16 +1,32 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 
 module Main where
 
-import Data.List ( isPrefixOf )
+import qualified Data.ByteString.Char8 as BS
+import Data.List (isPrefixOf)
+import Data.Yaml (ToJSON, encode, object, toJSON, (.=))
+import GHC.Generics
 import System.Environment (getArgs)
-data ArgLike = Option String String | Flag String | Arg String deriving (Show)
+
+data ArgLike = Option {key :: String, value :: String} | Flag {key :: String} | Arg {value :: String} deriving (Show, Generic)
+
+instance ToJSON ArgLike where
+  toJSON (Option key value) = object ["type" .= ("option" :: String), "key" .= key, "value" .= value]
+  toJSON (Flag key) = object ["type" .= ("flag" :: String), "key" .= key]
+  toJSON (Arg value) = object ["type" .= ("arg" :: String), "value" .= value]
+
+toRepr :: ToJSON a => a -> String
+toRepr val = BS.unpack (encode val)
 
 data ArgStruct = ArgStruct
   { options :: [(String, String)],
     flags :: [String],
     args :: [String]
-  } deriving (Show)
+  }
+  deriving (Show)
 
 instance Semigroup ArgStruct where
   (<>) :: ArgStruct -> ArgStruct -> ArgStruct
@@ -20,22 +36,6 @@ instance Semigroup ArgStruct where
 instance Monoid ArgStruct where
   mempty :: ArgStruct
   mempty = ArgStruct [] [] []
-
-prettyFormat :: ArgStruct -> String
-prettyFormat (ArgStruct options' flags' args') =
-  unlines $
-    ["options:"]
-      ++ indentLines 2 ((>>=) options' (\(key, value) -> ["- key: " ++ quote key, "  value: " ++ quote value]))
-      ++ ["flags:"]
-      ++ indentLines 2 (map (\flag -> "- " ++ quote flag) flags')
-      ++ ["arguments:"]
-      ++ indentLines 2 (map (\arg -> "- " ++ quote arg) args')
-
-indentLines :: Int -> [String] -> [String]
-indentLines indentSize = map (replicate indentSize ' ' ++)
-
-quote :: String -> String
-quote s = "\"" ++ s ++ "\""
 
 parseArgLike :: [String] -> [ArgLike]
 parseArgLike [] = []
@@ -47,13 +47,5 @@ parseArgLike (x : xs)
   where
     hasDashPrefix = ("-" `isPrefixOf`)
 
-argToStruct :: ArgLike -> ArgStruct
-argToStruct (Option key value) = ArgStruct [(key, value)] [] []
-argToStruct (Flag flag) = ArgStruct [] [flag] []
-argToStruct (Arg arg) = ArgStruct [] [] [arg]
-
-restructureArgLike :: [ArgLike] -> ArgStruct
-restructureArgLike = foldMap argToStruct
-
 main :: IO ()
-main = putStrLn . prettyFormat . restructureArgLike . parseArgLike =<< getArgs
+main = putStrLn . toRepr . parseArgLike =<< getArgs
