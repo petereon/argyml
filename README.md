@@ -12,7 +12,7 @@ While there are spectacularly powerful CLI tools and shell-scripts, CLI parsing 
 ```zsh
 get_host () {
     args=$(argyml $@)
-    host=$(echo $args | yq eval '.options.[] | select(.key == "*host*") | .value' )
+    host=$(echo $args | yq eval '.[] | select(.key == "*host*") | .value' )
     echo $host
 }
 ```
@@ -32,15 +32,17 @@ argyml some arguments --host 127.0.0.1 -i --another-flag
 and receive YAML in standard output:
 
 ```yaml
-options:
-  - key: "--host"
-    value: "127.0.0.1"
-flags:
-  - "-i"
-  - "--another-flag"
-arguments:
-  - "some"
-  - "arguments"
+- type: arg
+  value: some
+- type: arg
+  value: arguments
+- key: --host
+  type: option
+  value: 127.0.0.1
+- key: -i
+  type: flag
+- key: --another-flag
+  type: flag
 ```
 
 
@@ -57,5 +59,6 @@ arguments:
 
 - [x] Refactor
 - [ ] Option to directly generate a bash associative array?
+- [ ] Maybe figure out a way to provide schema for options, flags and arguments?
 
 [^1]: For type casting you should rely on downstream.
