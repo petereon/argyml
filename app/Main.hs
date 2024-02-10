@@ -21,22 +21,6 @@ instance ToJSON ArgLike where
 toRepr :: ToJSON a => a -> String
 toRepr val = BS.unpack (encode val)
 
-data ArgStruct = ArgStruct
-  { options :: [(String, String)],
-    flags :: [String],
-    args :: [String]
-  }
-  deriving (Show)
-
-instance Semigroup ArgStruct where
-  (<>) :: ArgStruct -> ArgStruct -> ArgStruct
-  (<>) (ArgStruct options' flags' args') (ArgStruct options'' flags'' args'') =
-    ArgStruct (options' <> options'') (flags' <> flags'') (args' <> args'')
-
-instance Monoid ArgStruct where
-  mempty :: ArgStruct
-  mempty = ArgStruct [] [] []
-
 parseArgLike :: [String] -> [ArgLike]
 parseArgLike [] = []
 parseArgLike (x : xs)
